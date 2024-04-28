@@ -35,7 +35,11 @@ fn lt_mul(x: &Tensor, w: &QMatMul, lt: CublasLt) -> Result<Tensor> {
                 [bsize, _, _] => w.broadcast_left(bsize)?,
                 _ => w,
             };
-            fused_batch_matmul(&w, &x, None, None, None, None, None, lt)
+            // remove first dimension (batch)
+            let w = w.squeeze(0)?;
+            let x = x.squeeze(0)?;
+            let out = fused_matmul(&w, &x, None, None, None, None, None, lt)?;
+            out.unsqueeze(0)
 
             // let w = match *x.dims() {
             //     [b1, b2, _, _] => w.broadcast_left((b1, b2))?.t()?,
